@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <title>NBA shortchart</title>
+</head>
+<body>
+    <div id="shot-chart"></div>
+<a href="/">HOME</a>
+<script type="text/javascript" src="{{ url_for('static', filename='js/d3.js') }}"></script>
+
+<script type="text/javascript" >
+var json = {{shotchart | tojson }}
+console.log(json['resultSets'][0]['rowSet'])
+
+
+
+
+function loadShotChart(playerData) {
+    var max = { 
+        x: 780, 
+        y: 650
+    };
+    var svg = d3.select("#shot-chart").html("");
+    svg = d3.select("#shot-chart").append("svg:svg")
+    .attr("width", max.x)
+    .attr("height", max.y)
+    .attr("background-color", "#122737")
+    .append("g")
+    .attr("id", "shotchart");
+
+    svg.append("svg:defs")
+    .append("svg:pattern")
+    .attr("id", "bg")
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr("width", max.x)
+    .attr("height", max.y)
+    .append("svg:image")
+    .attr("id","image-url")
+    .attr("width", max.x)
+    .attr("height", max.y);
+
+    svg.append("rect")
+    .attr("x", "0")
+    .attr("y", "0")
+    .attr("width", max.x)
+    .attr("height", max.y)
+    .attr("fill", "url(#bg)");
+
+    var xScale = d3.scaleLinear()
+    .domain([-250, 250])
+    .range([0, 780]);
+
+    var yScale = d3.scaleLinear()
+    .domain([-1,0, -150])
+    .range([590,589, 371]);
+
+    var colorValue = function(d) {
+        if(d[20] === 0) {
+            return "#000099";
+        }
+        if(d[20] === 1) {
+            return "#ff0000";
+        }
+    }
+
+    var xValue = function(d) {
+        return xScale(-d[17]);
+    }
+
+    var yValue = function(d) {
+        return (yScale(-d[18]));
+    }
+
+    var classByShot = function(d) {
+        if(d[20] === "Missed Shot") {
+            return "dot missed";
+        }
+        if(d[20] === "Made Shot") {
+            return "dot made";
+        }
+    }
+
+    d3.selectAll('dot').remove();
+    var node = svg.selectAll("dot").data(playerData)
+    node.enter()
+    .append("svg:circle")
+    .attr("r", 4)
+    .attr("cx", function(d) { return  xValue(d);})
+    .attr("cy", function(d) { return yValue(d);})
+    .attr("class", function(d) { return classByShot(d);})
+    .style("fill", function(d) { return colorValue(d);})
+    .on("mouseover", function(d) { 
+        d3.select(this)
+        .attr("r",8)
+          .attr("fill", "rgb(39, 250, 102)")
+    })
+    .on("mouseout", function(d) { 
+      d3.select(this)
+      .attr("r",4)
+      .style("fill", function(d) { return colorValue(d);})
+    });
+
+}
+
+loadShotChart(json['resultSets'][0]['rowSet']);
+ 
+</script>
+</body>
+
+</html>
