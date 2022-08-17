@@ -4,14 +4,45 @@
     <title>NBA shortchart</title>
 </head>
 <body>
+    <div><input type="checkbox" id="active_inactive" name="active" value="newsletter">
+    <label for="active">現役選手<form action="/shotchart" method="POST"><select id = "players" name="player_name"></select><button>再表示</button></form></select></div>
+    <div>Player Name:{{ player_name}}</div>
     <div id="shot-chart"></div>
 <a href="/">HOME</a>
 <script type="text/javascript" src="{{ url_for('static', filename='js/d3.js') }}"></script>
 
 <script type="text/javascript" >
-var json = {{shotchart | tojson }}
-console.log(json['resultSets'][0]['rowSet'])
+var json = {{shotchart | tojson }};
+var players = {{nba_players | tojson}};
 
+var active_check = d3.select("#active_inactive")
+active_check.on("change",update_players(active_check.property( "checked" )));
+
+function update_players(bool){
+    if(bool){
+        new_players = players.filter(function(d){d.is_active ==1});
+        loadPlayers(new_players);
+        console.log(new_players);
+    }
+    else{
+        new_players = players.filter(function(d){d.is_active ==0});
+        loadPlayers(new_players);
+    }
+
+}
+
+
+
+
+function loadPlayers(players){
+    var select = d3.select("#players")
+    select.selectAll("option").remove().data(players)
+          .enter()
+          .append("option")
+          .attr("value", function(d) {return JSON.stringify(d)})
+          .text(function(d) {return d.full_name});
+}
+loadPlayers(players);
 
 
 
